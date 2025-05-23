@@ -1,6 +1,6 @@
 'use client';
 
-import styles from './page.module.css';
+import styles from '../page.module.css';
 import { useState, useEffect } from 'react';
 import useNetwork from '@/data/network';
 import { getDistance } from '@/helpers/get-distance';
@@ -10,6 +10,7 @@ export default function Home() {
   const [filter, setFilter] = useState('');
   const [location, setLocation] = useState({});
   const { network, isLoading, isError } = useNetwork();
+  const [showSuggestions, setShowSuggestions] = useState(false); // keuzelijst
 
   // use effect gebruiken om bv iets op te roepen enkel bij opstart van de app
   useEffect(() => {
@@ -57,15 +58,43 @@ export default function Home() {
 
   return (
     <div>
-      <h1 className={styles.title}>Stations</h1>
-      <input type="text" value={filter} onChange={handleFilterChange} />
-      {stations.map((station) => (
-        <div key={station.id}>
-          <Link href={`/stations/${station.id}`}>
-            {station.name}: {station.distance}km
-          </Link>
-        </div>
-      ))}
+      <div>
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        />
+
+        {showSuggestions && filter.length > 0 && (
+          <ul>
+            <li
+              onClick={() => {
+                setFilter('📍 Gebruik huidige locatie');
+                setShowSuggestions(false);
+              }}
+            >
+              📍 Gebruik huidige locatie
+            </li>
+
+            {stations.slice(0, 10).map((station) => (
+              <li
+                key={station.id}
+                onClick={() => {
+                  setFilter(station.name);
+                  setShowSuggestions(false);
+                }}
+              >
+                {station.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
