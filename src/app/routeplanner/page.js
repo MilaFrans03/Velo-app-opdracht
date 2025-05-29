@@ -58,9 +58,7 @@ export default function Home() {
   async function geocodeAddress(address) {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address
-        )}`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`,
         {
           headers: {
             'User-Agent': 'YourAppName/1.0 (your@email.com)',
@@ -158,7 +156,8 @@ export default function Home() {
                     setShowSuggestions(false);
                   }}
                 >
-                  {station.name}
+                  {station.name} ({station.free_bikes ?? 0} fietsen,{' '}
+                  {station.empty_slots ?? 0} plaatsen)
                 </li>
               ))}
           </ul>
@@ -205,8 +204,24 @@ export default function Home() {
         )}
       </div>
 
-      {/* Resultaat */}
+      {/* Info per station */}
       <div style={{ marginTop: '2rem' }}>
+        {station1 && (
+          <p>
+            📍 <strong>{station1.name}</strong> — {station1.free_bikes ?? 0}{' '}
+            fietsen, {station1.empty_slots ?? 0} plaatsen
+          </p>
+        )}
+        {station2 && (
+          <p>
+            📍 <strong>{station2.name}</strong> — {station2.free_bikes ?? 0}{' '}
+            fietsen, {station2.empty_slots ?? 0} plaatsen
+          </p>
+        )}
+      </div>
+
+      {/* Afstand */}
+      <div style={{ marginTop: '1rem' }}>
         {station1 && station2 && distanceBetween !== null && (
           <p>
             📏 Afstand tussen <strong>{station1.name}</strong> en{' '}
