@@ -4,13 +4,19 @@ import styles from '../page.module.css';
 import { useState, useEffect } from 'react';
 import useNetwork from '@/data/network';
 import { useRoutePlannerLogic } from '@/helpers/route-planner-logic';
+import useRoute from '@/data/routedescription';
 
 export default function Routeplanner() {
   const { network, isLoading, isError } = useNetwork();
   const logic = useRoutePlannerLogic(network);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error</div>;
+  const start = logic.coord1
+    ? [logic.coord1.longitude, logic.coord1.latitude]
+    : null;
+  const end = logic.coord2
+    ? [logic.coord2.longitude, logic.coord2.latitude]
+    : null;
+  const { instructions, distance, duration } = useRoute(start, end);
 
   function renderInputField(
     filter,
@@ -19,6 +25,7 @@ export default function Routeplanner() {
     setShowSuggestions,
     stations
   ) {
+    if (!stations) return null; // ⬅️ check toegevoegd
     return (
       <div>
         <input
@@ -42,8 +49,8 @@ export default function Routeplanner() {
               📍 Gebruik huidige locatie
             </li>
             {stations
-              .filter((station) =>
-                station.name.toLowerCase().includes(filter.toLowerCase())
+              .filter((s) =>
+                s.name.toLowerCase().includes(filter.toLowerCase())
               )
               .slice(0, 10)
               .map((station) => (
@@ -64,26 +71,41 @@ export default function Routeplanner() {
     );
   }
 
+  const directionIcons = {
+    0: '⬆️',
+    1: '↖️',
+    2: '↗️',
+    3: '⬅️',
+    4: '➡️',
+    5: '⤴️',
+    6: '⬇️',
+    7: '🏁',
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error</div>;
+
   return (
     <div>
+      {/* Inputvelden */}
       {renderInputField(
         logic.filter1,
         logic.setFilter1,
         logic.showSuggestions1,
         logic.setShowSuggestions1,
-        network.stations
+        network?.stations // ⬅️ safe access
       )}
-
       <div style={{ marginTop: '2rem' }}>
         {renderInputField(
           logic.filter2,
           logic.setFilter2,
           logic.showSuggestions2,
           logic.setShowSuggestions2,
-          network.stations
+          network?.stations // ⬅️ safe access
         )}
       </div>
 
+      {/* Info per station */}
       <div style={{ marginTop: '2rem' }}>
         {logic.station1 && (
           <p>
@@ -101,13 +123,42 @@ export default function Routeplanner() {
         )}
       </div>
 
-      {logic.station1 && logic.station2 && logic.distanceBetween !== null && (
+      {/* Afstand en duur */}
+      {logic.station1 && logic.station2 && distance !== null && (
         <p style={{ marginTop: '1rem' }}>
-          📏 Afstand tussen <strong>{logic.station1.name}</strong> en{' '}
-          <strong>{logic.station2.name}</strong>:{' '}
-          {logic.distanceBetween.toFixed(2)} km
+          📏 Route-afstand: {(distance / 1000).toFixed(2)} km <br />⏱ Reistijd:{' '}
+          {(duration / 60).toFixed(0)} minuten
         </p>
       )}
+
+      {/* Route-instructies */}
+      {instructions.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <h3>🗺️ Routebeschrijving</h3>
+          <ol>
+            {instructions.map((step, idx) => {
+              const icon = directionIcons[step.type] || '➡️';
+              return (
+                <li key={idx}>
+                  {icon} {step.instruction} ({step.distance.toFixed(0)} m)
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
+      {/* Geen instructies */}
+      {!isError && instructions.length === 0 && start && end && (
+        <p>Geen routebeschrijving beschikbaar.</p>
+      )}
+
+      {/* Debug info */}
+      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'gray' }}>
+        <h4>Debug info</h4>
+        <p>Start: {start ? start.join(', ') : '❌ Geen start'}</p>
+        <p>End: {end ? end.join(', ') : '❌ Geen eindpunt'}</p>
+      </div>
     </div>
   );
 }

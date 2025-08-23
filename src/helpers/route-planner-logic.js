@@ -1,148 +1,86 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { getDistance } from '@/helpers/get-distance';
 
-// 📌 Adres → coördinaten via Nominatim API
-async function geocodeAddress(address) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`,
-      {
-        headers: {
-          'User-Agent': 'YourAppName/1.0 (youremail@example.com)',
-        },
-      }
-    );
-    const data = await res.json();
-    if (data.length > 0) {
-      return {
-        latitude: parseFloat(data[0].lat),
-        longitude: parseFloat(data[0].lon),
-      };
-    }
-  } catch (err) {
-    console.error('Geocoding failed:', err);
-  }
-  return null;
-}
-
-// 📌 Dichtstbijzijnde station zoeken
-function getClosestStation(lat, lon, stations) {
-  const sorted = stations
-    .map((station) => ({
-      ...station,
-      distance: getDistance(lat, lon, station.latitude, station.longitude)
-        .distance,
-    }))
-    .sort((a, b) => a.distance - b.distance);
-
-  return sorted[0];
-}
-
-// 📌 Input verwerken naar coord + station
-async function resolveInput(input, setCoord, setStation, location, stations) {
-  if (!input) return;
-
-  if (input === '📍 Gebruik huidige locatie') {
-    setCoord(location);
-    if (location.latitude && location.longitude) {
-      const closest = getClosestStation(
-        location.latitude,
-        location.longitude,
-        stations
-      );
-      setStation(closest);
-    }
-    return;
-  }
-
-  const exactStation = stations.find(
-    (s) => s.name.toLowerCase() === input.toLowerCase()
-  );
-  if (exactStation) {
-    setCoord({
-      latitude: exactStation.latitude,
-      longitude: exactStation.longitude,
-    });
-    setStation(exactStation);
-    return;
-  }
-
-  const geocoded = await geocodeAddress(input);
-  if (geocoded) {
-    setCoord(geocoded);
-    const closest = getClosestStation(
-      geocoded.latitude,
-      geocoded.longitude,
-      stations
-    );
-    setStation(closest);
-  }
-}
-
-// 📌 Custom hook met alle state & berekeningen
 export function useRoutePlannerLogic(network) {
   const [filter1, setFilter1] = useState('');
   const [filter2, setFilter2] = useState('');
   const [showSuggestions1, setShowSuggestions1] = useState(false);
   const [showSuggestions2, setShowSuggestions2] = useState(false);
 
-  const [location, setLocation] = useState({});
-  const [coord1, setCoord1] = useState(null);
-  const [coord2, setCoord2] = useState(null);
   const [station1, setStation1] = useState(null);
   const [station2, setStation2] = useState(null);
 
-  // 📍 huidige locatie ophalen
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          setLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          }),
-        (err) => console.error(err)
-      );
-    }
-  }, []);
+  const [coord1, setCoord1] = useState(null);
+  const [coord2, setCoord2] = useState(null);
 
-  // 📍 input1 en input2 resolveren
-  useEffect(() => {
-    if (network?.stations) {
-      resolveInput(filter1, setCoord1, setStation1, location, network.stations);
-    }
-  }, [filter1, network, location]);
+  const [distanceBetween, setDistanceBetween] = useState(null);
 
+  //  Zoek stations en zet coördinaten meteen goed
   useEffect(() => {
-    if (network?.stations) {
-      resolveInput(filter2, setCoord2, setStation2, location, network.stations);
-    }
-  }, [filter2, network, location]);
+    if (!network?.stations) return;
 
-  // 📏 afstand berekenen
-  let distanceBetween = null;
-  if (coord1 && coord2) {
-    distanceBetween =
-      getDistance(
-        coord1.latitude,
-        coord1.longitude,
-        coord2.latitude,
-        coord2.longitude
-      ).distance / 1000;
-  }
+    const s1 = network.stations.find(
+      (s) => s.name.toLowerCase() === filter1.toLowerCase()
+    );
+    const s2 = network.stations.find(
+      (s) => s.name.toLowerCase() === filter2.toLowerCase()
+    );
+
+    if (s1) {
+      setStation1(s1);
+      setCoord1({ latitude: s1.latitude, longitude: s1.longitude });
+    } else {
+      setStation1(null);
+      setCoord1(null);
+    }
+
+    if (s2) {
+      setStation2(s2);
+      setCoord2({ latitude: s2.latitude, longitude: s2.longitude });
+    } else {
+      setStation2(null);
+      setCoord2(null);
+    }
+  }, [filter1, filter2, network]);
+
+  // Bereken afstand (haversine)
+  useEffect(() => {
+    if (!coord1 || !coord2) {
+      setDistanceBetween(null);
+      return;
+    }
+
+    const R = 6371; // km
+    const dLat = ((coord2.latitude - coord1.latitude) * Math.PI) / 180;
+    const dLon = ((coord2.longitude - coord1.longitude) * Math.PI) / 180;
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((coord1.latitude * Math.PI) / 180) *
+        Math.cos((coord2.latitude * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    setDistanceBetween(R * c);
+  }, [coord1, coord2]);
 
   return {
     filter1,
     setFilter1,
-    filter2,
-    setFilter2,
     showSuggestions1,
     setShowSuggestions1,
+    station1,
+
+    filter2,
+    setFilter2,
     showSuggestions2,
     setShowSuggestions2,
-    station1,
     station2,
+
+    coord1,
+    coord2,
     distanceBetween,
-    location,
   };
 }
