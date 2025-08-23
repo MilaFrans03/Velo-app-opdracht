@@ -5,19 +5,25 @@ import { useState, useEffect } from 'react';
 import useNetwork from '@/data/network';
 import { getDistance } from '@/helpers/get-distance';
 
-export default function Home() {
+export default function Routeplanner() {
+  //invoervelden
   const [filter1, setFilter1] = useState('');
   const [filter2, setFilter2] = useState('');
+  //tonen van suggestielijst
   const [showSuggestions1, setShowSuggestions1] = useState(false);
   const [showSuggestions2, setShowSuggestions2] = useState(false);
+  //huidide locatie opslagen
   const [location, setLocation] = useState({});
+  // data uit netwerk (stations..)
   const { network, isLoading, isError } = useNetwork();
 
+  //geselecteerde stations van de velden
   const [coord1, setCoord1] = useState(null);
   const [coord2, setCoord2] = useState(null);
   const [station1, setStation1] = useState(null);
   const [station2, setStation2] = useState(null);
 
+  // huidige locatie ophalen bij laden van pagina
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -32,10 +38,11 @@ export default function Home() {
     }
   }, []);
 
+  // stations zoeken bij elke keer dat filter1 verranderd
   useEffect(() => {
     resolveInput(filter1, setCoord1, setStation1);
   }, [filter1]);
-
+  // stations zoeken bij elke keer dat filter2 verranderd
   useEffect(() => {
     resolveInput(filter2, setCoord2, setStation2);
   }, [filter2]);
@@ -43,6 +50,7 @@ export default function Home() {
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
 
+  // functie dichtsbijzijnde station zoeken
   function getClosestStation(lat, lon) {
     const sorted = network.stations
       .map((station) => ({
@@ -55,6 +63,7 @@ export default function Home() {
     return sorted[0];
   }
 
+  // adres omzetten naar coordinaten (Nominatim API)
   async function geocodeAddress(address) {
     try {
       const res = await fetch(
@@ -78,9 +87,10 @@ export default function Home() {
     return null;
   }
 
+  // dichtsijzijnde station bepalen
   async function resolveInput(input, setCoord, setStation) {
     if (!input) return;
-
+    // optie huidige locatie
     if (input === '📍 Gebruik huidige locatie') {
       setCoord(location);
       if (location.latitude && location.longitude) {
@@ -92,7 +102,7 @@ export default function Home() {
       }
       return;
     }
-
+    // optie stationnaam invoeren
     const exactStation = network.stations.find(
       (s) => s.name.toLowerCase() === input.toLowerCase()
     );
@@ -104,7 +114,7 @@ export default function Home() {
       setStation(exactStation);
       return;
     }
-
+    // anders: dichtsbijzijnde station
     const geocoded = await geocodeAddress(input);
     if (geocoded) {
       setCoord(geocoded);
@@ -112,7 +122,7 @@ export default function Home() {
       setStation(closest);
     }
   }
-
+  // functie voor zoekveld met suggesties
   function renderInputField(
     filter,
     setFilter,
@@ -165,7 +175,7 @@ export default function Home() {
       </div>
     );
   }
-
+  // afstand berekenen tussen 2 locaties
   let distanceBetween = null;
   if (
     coord1 &&
@@ -179,9 +189,9 @@ export default function Home() {
         coord1.longitude,
         coord2.latitude,
         coord2.longitude
-      ).distance / 1000;
+      ).distance / 1000; // omzet km
   }
-
+  // return van UI
   return (
     <div>
       {/* Eerste zoekveld */}
