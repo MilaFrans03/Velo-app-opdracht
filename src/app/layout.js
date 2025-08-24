@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { Home, Map } from 'lucide-react'; // icons
 
 import './globals.css';
 
@@ -24,7 +25,6 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <nav>
           <Link href="/">Home</Link>
-          <Link href="/about">About</Link>
           <Link href="/routeplanner">Routeplanner</Link>
         </nav>
         <main>{children}</main>

@@ -25,7 +25,7 @@ export default function Routeplanner() {
     setShowSuggestions,
     stations
   ) {
-    if (!stations) return null; // ⬅️ check toegevoegd
+    if (!stations) return null;
     return (
       <div>
         <input
@@ -93,7 +93,7 @@ export default function Routeplanner() {
         logic.setFilter1,
         logic.showSuggestions1,
         logic.setShowSuggestions1,
-        network?.stations // ⬅️ safe access
+        network?.stations
       )}
       <div style={{ marginTop: '2rem' }}>
         {renderInputField(
@@ -101,7 +101,7 @@ export default function Routeplanner() {
           logic.setFilter2,
           logic.showSuggestions2,
           logic.setShowSuggestions2,
-          network?.stations // ⬅️ safe access
+          network?.stations
         )}
       </div>
 
@@ -131,16 +131,31 @@ export default function Routeplanner() {
         </p>
       )}
 
-      {/* Route-instructies */}
+      {/* Route-instructies met highlight en grotere tekst */}
       {instructions.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
-          <h3>🗺️ Routebeschrijving</h3>
-          <ol>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
+            🗺️ Routebeschrijving
+          </h3>
+          <ol style={{ listStyle: 'none', padding: 0 }}>
             {instructions.map((step, idx) => {
               const icon = directionIcons[step.type] || '➡️';
               return (
-                <li key={idx}>
-                  {icon} {step.instruction} ({step.distance.toFixed(0)} m)
+                <li
+                  key={idx}
+                  style={{
+                    background: '#f0f8ff',
+                    padding: '10px 15px',
+                    marginBottom: '8px',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
+                    fontWeight: '500',
+                  }}
+                >
+                  {icon} {step.instruction} <br />
+                  <span style={{ fontSize: '0.9rem', color: '#555' }}>
+                    ({step.distance.toFixed(0)} m)
+                  </span>
                 </li>
               );
             })}
@@ -156,8 +171,8 @@ export default function Routeplanner() {
       {/* Debug info */}
       <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'gray' }}>
         <h4>Debug info</h4>
-        <p>Start: {start ? start.join(', ') : '❌ Geen start'}</p>
-        <p>End: {end ? end.join(', ') : '❌ Geen eindpunt'}</p>
+        <p>Start: {start ? start.join(', ') : 'Geen start'}</p>
+        <p>End: {end ? end.join(', ') : 'Geen eindpunt'}</p>
       </div>
     </div>
   );
