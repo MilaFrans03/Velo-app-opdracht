@@ -15,6 +15,7 @@ export default function Routeplanner() {
   const end = logic.coord2
     ? [logic.coord2.longitude, logic.coord2.latitude]
     : null;
+
   const { instructions, distance, duration } = useRoute(start, end);
 
   function renderInputField(
@@ -22,10 +23,13 @@ export default function Routeplanner() {
     setFilter,
     showSuggestions,
     setShowSuggestions,
+    coord,
+    setCoord,
     stations,
     placeholder
   ) {
     if (!stations) return null;
+
     return (
       <div className={styles.stationsContainer}>
         <input
@@ -40,17 +44,20 @@ export default function Routeplanner() {
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         />
+
         {showSuggestions && filter.length > 0 && (
           <div className={styles.stationsContainer}>
+            {/* Gebruik huidige locatie */}
             <div
               className={styles.stationCard}
               onClick={() => {
-                setFilter('Gebruik huidige locatie');
+                logic.useCurrentLocation(setFilter, setCoord);
                 setShowSuggestions(false);
               }}
             >
               Gebruik huidige locatie
             </div>
+
             {stations
               .filter((s) =>
                 s.name.toLowerCase().includes(filter.toLowerCase())
@@ -62,6 +69,10 @@ export default function Routeplanner() {
                   className={styles.stationCard}
                   onClick={() => {
                     setFilter(station.name);
+                    setCoord({
+                      latitude: station.latitude,
+                      longitude: station.longitude,
+                    });
                     setShowSuggestions(false);
                   }}
                 >
@@ -92,14 +103,6 @@ export default function Routeplanner() {
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
 
-  // berekeningen wandeltijd & fietstijd
-  const walkingSpeed = 5; // km/u
-  const cyclingSpeed = 15; // km/u
-  const walkingTime =
-    distance !== null ? (distance / 1000 / walkingSpeed) * 60 : null;
-  const cyclingTime =
-    distance !== null ? (distance / 1000 / cyclingSpeed) * 60 : null;
-
   return (
     <div>
       <h1 className={styles.title}>Stations zoeken</h1>
@@ -113,6 +116,8 @@ export default function Routeplanner() {
         logic.setFilter1,
         logic.showSuggestions1,
         logic.setShowSuggestions1,
+        logic.coord1,
+        logic.setCoord1,
         network?.stations,
         'Startstation'
       )}
@@ -126,26 +131,32 @@ export default function Routeplanner() {
         logic.setFilter2,
         logic.showSuggestions2,
         logic.setShowSuggestions2,
+        logic.coord2,
+        logic.setCoord2,
         network?.stations,
         'Eindstation'
       )}
 
       {/* Afstand en tijden */}
-      {logic.station1 && logic.station2 && distance !== null && (
+      {logic.coord1 && logic.coord2 && logic.distanceBetween !== null && (
         <div style={{ marginTop: '1rem' }}>
           <p>
-            <strong>Route-afstand:</strong> {(distance / 1000).toFixed(2)} km
-          </p>
-          <p>
-            <strong>Fietstijd:</strong> {(duration / 60).toFixed(0)} minuten
+            <strong>Route-afstand:</strong> {logic.distanceBetween.toFixed(2)}{' '}
+            km
           </p>
           <p>
             <strong>Wandeltijd:</strong>{' '}
-            {walkingTime !== null ? walkingTime.toFixed(0) : '-'} minuten
+            {logic.walkingTime !== null ? logic.walkingTime.toFixed(0) : '-'}{' '}
+            minuten
           </p>
           <p>
             <strong>Fietstijd:</strong>{' '}
-            {cyclingTime !== null ? cyclingTime.toFixed(0) : '-'} minuten
+            {logic.cyclingTime !== null ? logic.cyclingTime.toFixed(0) : '-'}{' '}
+            minuten
+          </p>
+          <p>
+            <strong>Fietstijd via route:</strong>{' '}
+            {duration ? (duration / 60).toFixed(0) : '-'} minuten
           </p>
         </div>
       )}

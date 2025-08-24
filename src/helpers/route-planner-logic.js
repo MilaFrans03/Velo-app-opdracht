@@ -16,35 +16,58 @@ export function useRoutePlannerLogic(network) {
 
   const [distanceBetween, setDistanceBetween] = useState(null);
 
-  //  Zoek stations en zet coördinaten meteen goed
+  // 📌 Huidige locatie ophalen
+  const useCurrentLocation = (setFilter, setCoord) => {
+    if (!navigator.geolocation) {
+      alert('Geolocatie wordt niet ondersteund.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCoord({ latitude, longitude });
+        setFilter('Huidige locatie'); // label in input
+      },
+      (error) => {
+        alert('Kon huidige locatie niet ophalen.');
+        console.error(error);
+      }
+    );
+  };
+
+  // Zoek stations en/of gebruik huidige locatie
   useEffect(() => {
     if (!network?.stations) return;
 
-    const s1 = network.stations.find(
-      (s) => s.name.toLowerCase() === filter1.toLowerCase()
-    );
-    const s2 = network.stations.find(
-      (s) => s.name.toLowerCase() === filter2.toLowerCase()
-    );
-
-    if (s1) {
-      setStation1(s1);
-      setCoord1({ latitude: s1.latitude, longitude: s1.longitude });
-    } else {
-      setStation1(null);
-      setCoord1(null);
+    // Station 1
+    if (filter1 && filter1.toLowerCase() !== 'huidige locatie') {
+      const s1 = network.stations.find(
+        (s) => s.name.toLowerCase() === filter1.toLowerCase()
+      );
+      if (s1) {
+        setStation1(s1);
+        setCoord1({ latitude: s1.latitude, longitude: s1.longitude });
+      } else {
+        setStation1(null);
+      }
     }
 
-    if (s2) {
-      setStation2(s2);
-      setCoord2({ latitude: s2.latitude, longitude: s2.longitude });
-    } else {
-      setStation2(null);
-      setCoord2(null);
+    // Station 2
+    if (filter2 && filter2.toLowerCase() !== 'huidige locatie') {
+      const s2 = network.stations.find(
+        (s) => s.name.toLowerCase() === filter2.toLowerCase()
+      );
+      if (s2) {
+        setStation2(s2);
+        setCoord2({ latitude: s2.latitude, longitude: s2.longitude });
+      } else {
+        setStation2(null);
+      }
     }
   }, [filter1, filter2, network]);
 
-  // Bereken afstand (haversine)
+  // Bereken afstand (Haversine)
   useEffect(() => {
     if (!coord1 || !coord2) {
       setDistanceBetween(null);
@@ -56,15 +79,22 @@ export function useRoutePlannerLogic(network) {
     const dLon = ((coord2.longitude - coord1.longitude) * Math.PI) / 180;
 
     const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLat / 2) ** 2 +
       Math.cos((coord1.latitude * Math.PI) / 180) *
         Math.cos((coord2.latitude * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+        Math.sin(dLon / 2) ** 2;
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     setDistanceBetween(R * c);
   }, [coord1, coord2]);
+
+  // Wandelen & fietsen (in minuten)
+  const walkingSpeed = 5;
+  const cyclingSpeed = 15;
+  const walkingTime =
+    distanceBetween !== null ? (distanceBetween / walkingSpeed) * 60 : null;
+  const cyclingTime =
+    distanceBetween !== null ? (distanceBetween / cyclingSpeed) * 60 : null;
 
   return {
     filter1,
@@ -72,15 +102,21 @@ export function useRoutePlannerLogic(network) {
     showSuggestions1,
     setShowSuggestions1,
     station1,
+    coord1,
+    setCoord1,
 
     filter2,
     setFilter2,
     showSuggestions2,
     setShowSuggestions2,
     station2,
-
-    coord1,
     coord2,
+    setCoord2,
+
     distanceBetween,
+    walkingTime,
+    cyclingTime,
+
+    useCurrentLocation, // functie naar pagina
   };
 }
