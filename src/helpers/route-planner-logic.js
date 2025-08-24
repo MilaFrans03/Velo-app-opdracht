@@ -16,24 +16,32 @@ export function useRoutePlannerLogic(network) {
 
   const [distanceBetween, setDistanceBetween] = useState(null);
 
-  // 📌 Huidige locatie ophalen
+  const [watchId, setWatchId] = useState(null);
+
+  // 📌 Start live tracking voor "huidige locatie"
   const useCurrentLocation = (setFilter, setCoord) => {
     if (!navigator.geolocation) {
       alert('Geolocatie wordt niet ondersteund.');
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
+    // Stop eerdere watch
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+
+    const id = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setCoord({ latitude, longitude });
-        setFilter('Huidige locatie'); // label in input
+        setFilter('Huidige locatie');
       },
       (error) => {
         alert('Kon huidige locatie niet ophalen.');
         console.error(error);
-      }
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
     );
+
+    setWatchId(id);
   };
 
   // Zoek stations en/of gebruik huidige locatie
@@ -88,7 +96,6 @@ export function useRoutePlannerLogic(network) {
     setDistanceBetween(R * c);
   }, [coord1, coord2]);
 
-  // Wandelen & fietsen (in minuten)
   const walkingSpeed = 5;
   const cyclingSpeed = 15;
   const walkingTime =
@@ -117,6 +124,6 @@ export function useRoutePlannerLogic(network) {
     walkingTime,
     cyclingTime,
 
-    useCurrentLocation, // functie naar pagina
+    useCurrentLocation,
   };
 }
