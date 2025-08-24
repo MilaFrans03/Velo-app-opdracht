@@ -23,11 +23,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <nav>
-          <Link href="/">Home</Link>
-          <Link href="/routeplanner">Routeplanner</Link>
+        <main className="app-container">{children}</main>
+
+        <nav className="bottom-nav">
+          <Link href="/" className="nav-item">
+            <Home size={24} />
+            <span>Home</span>
+          </Link>
+          <Link href="/routeplanner" className="nav-item">
+            <Map size={24} />
+            <span>Route-planner</span>
+          </Link>
         </nav>
-        <main>{children}</main>
       </body>
     </html>
   );

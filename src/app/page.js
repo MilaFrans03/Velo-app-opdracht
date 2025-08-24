@@ -1,10 +1,12 @@
 'use client';
 
 import styles from './page.module.css';
+
 import { useState, useEffect } from 'react';
 import useNetwork from '@/data/network';
 import { getDistance } from '@/helpers/get-distance';
 import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 
 export default function Home() {
   const [filter, setFilter] = useState('');
@@ -57,15 +59,38 @@ export default function Home() {
 
   return (
     <div>
-      <h1 className={styles.title}>Stations</h1>
-      <input type="text" value={filter} onChange={handleFilterChange} />
-      {stations.map((station) => (
-        <div key={station.id}>
-          <Link href={`/stations/${station.id}`}>
-            {station.name}: {station.distance}km
-          </Link>
-        </div>
-      ))}
+      <h1 className={styles.title}>Dichtsbijzijnde stations</h1>
+
+      <input
+        type="text"
+        value={filter}
+        onChange={handleFilterChange}
+        placeholder="Zoek stations..."
+        className={styles.filter}
+      />
+
+      <div className={styles.stationsContainer}>
+        {stations
+          .slice(0, 3) // alleen de top 3
+          .map((station, index) => (
+            <Link
+              key={station.id}
+              href={`/stations/${station.id}`}
+              className={styles.stationCard}
+            >
+              <div className={styles.stationName}>
+                {index + 1}. {station.name}
+              </div>
+              <div className={styles.stationDistance}>
+                <MapPin
+                  size={16}
+                  style={{ marginRight: '6px', verticalAlign: 'middle' }}
+                />
+                {station.distance.toFixed(2)} km
+              </div>
+            </Link>
+          ))}
+      </div>
     </div>
   );
 }
