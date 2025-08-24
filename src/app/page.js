@@ -9,36 +9,27 @@ import StationImage from '@/components/StationImage';
 import styles from './page.module.css';
 
 export default function Home() {
-  const defaultLocation = { latitude: 51.9244, longitude: 4.4777 }; // Rotterdam als fallback
+  const defaultLocation = { latitude: 51.9244, longitude: 4.4777 };
   const [filter, setFilter] = useState('');
   const [location, setLocation] = useState(defaultLocation);
   const [topStations, setTopStations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const { network, isLoading, isError } = useNetwork();
 
-  // Huidige locatie ophalen
   useEffect(() => {
-    if (!navigator.geolocation) {
-      console.warn('Geolocatie niet beschikbaar, gebruik fallback locatie.');
-      return;
-    }
+    if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      (pos) =>
         setLocation({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
-        });
-      },
-      (err) => {
-        console.error('Kon huidige locatie niet ophalen:', err.message || err);
-        alert('Kon huidige locatie niet ophalen, gebruik standaardlocatie.');
-      },
+        }),
+      (err) => console.warn('Fallback locatie gebruikt:', err),
       { enableHighAccuracy: true }
     );
   }, []);
 
-  // Bereken afstanden en sorteer stations
   const stationsWithDistance = useMemo(() => {
     if (!network?.stations || !location.latitude) return [];
     return network.stations
@@ -50,19 +41,17 @@ export default function Home() {
             location.longitude,
             station.latitude,
             station.longitude
-          ).distance / 1000, // km
+          ).distance / 1000,
       }))
       .sort((a, b) => a.distance - b.distance);
   }, [network, location]);
 
-  // Stel top 3 en suggesties in
   useEffect(() => {
     if (stationsWithDistance.length === 0) return;
     setTopStations(stationsWithDistance.slice(0, 3));
     setSuggestions(stationsWithDistance.slice(3));
   }, [stationsWithDistance]);
 
-  // Filterbare suggesties
   const filteredSuggestions = filter
     ? suggestions.filter((station) =>
         station.name.toLowerCase().includes(filter.toLowerCase())
@@ -71,16 +60,14 @@ export default function Home() {
 
   const handleFilterChange = (e) => setFilter(e.target.value);
 
-  // Loading / error checks
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
   if (!network?.stations) return null;
 
   return (
-    <div>
+    <div className={styles.container}>
       <h1 className={styles.title}>Stations zoeken</h1>
 
-      {/* Top 3 stations */}
       <h2 className={styles.title2}>Dichtsbijzijnde stations</h2>
       <div className={styles.stationsContainer}>
         {topStations.map((station, index) => (
@@ -104,7 +91,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Zoekbalk */}
       <h2 className={styles.title2}>Zoek naar een station</h2>
       <input
         type="text"
@@ -114,7 +100,6 @@ export default function Home() {
         className={styles.filter}
       />
 
-      {/* Suggesties */}
       {filteredSuggestions.length > 0 && (
         <div className={styles.stationsContainer}>
           {filteredSuggestions.slice(0, 3).map((station) => (

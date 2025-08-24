@@ -27,7 +27,7 @@ export default function StationImage({ station }) {
       alt={station.name}
       style={{
         width: '100%',
-        height: '150px',
+        height: '100px',
         objectFit: 'cover',
         borderRadius: '12px',
         marginBottom: '8px',

@@ -1,3 +1,73 @@
+/* Titelbalk */
 .title {
-  color: green;
+  background: linear-gradient(90deg, #ffd60a, #ffc107); /* geel gradient */
+  color: #111827;
+  padding: 16px 24px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+/* Licht lift effect bij hover */
+.title:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsief: kleinere schermen */
+@media (max-width: 600px) {
+  .title {
+    font-size: 22px;
+    padding: 12px 16px;
+  }/* Container om alles in het midden van het scherm te centreren */
+.fullScreenCenter {
+  display: flex;
+  justify-content: center; /* horizontaal */
+  align-items: center;     /* verticaal */
+  height: 100vh;           /* volledige schermhoogte */
+  width: 100%;
+  background-color: #f5f5f5; /* optioneel: achtergrond */
+}
+
+/* Volledige breedte knop met grote tekst */
+.routeButton {
+  background-color: #ffd60a;
+  color: #111827;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 0;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+
+  width: 90%;         /* bijna volledige breedte */
+  max-width: 400px;   /* limiet op grote schermen */
+  text-align: center;
+}
+
+.routeButton:hover {
+  background-color: #ffc107;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.routeButton:active {
+  transform: translateY(1px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .routeButton {
+    font-size: 20px;
+    width: 95%;
+  }
 }

@@ -4,20 +4,38 @@ import styles from '../page.module.css';
 import useNetwork from '@/data/network';
 import { useRoutePlannerLogic } from '@/helpers/route-planner-logic';
 import useRoute from '@/data/routedescription';
-import CompassComponent from '@/components/Compass'; // Compass component
+import { useSearchParams } from 'next/navigation';
 
 export default function Routeplanner() {
   const { network, isLoading, isError } = useNetwork();
+  const searchParams = useSearchParams();
+
+  // Coördinaten uit query params halen
+  const startLat = parseFloat(searchParams.get('startLat'));
+  const startLon = parseFloat(searchParams.get('startLon'));
+  const endLat = parseFloat(searchParams.get('endLat'));
+  const endLon = parseFloat(searchParams.get('endLon'));
+
+  // Start / eind punten
+  const start =
+    startLat && startLon ? { latitude: startLat, longitude: startLon } : null;
+  const end = endLat && endLon ? { latitude: endLat, longitude: endLon } : null;
+
+  // Logic hook voor filters en suggesties
   const logic = useRoutePlannerLogic(network);
 
-  const start = logic.coord1
-    ? [logic.coord1.longitude, logic.coord1.latitude]
-    : null;
-  const end = logic.coord2
-    ? [logic.coord2.longitude, logic.coord2.latitude]
-    : null;
+  if (start) {
+    logic.setCoord1(start);
+    logic.setFilter1('Huidige locatie');
+  }
+  if (end) {
+    logic.setCoord2(end);
+  }
 
-  const { instructions, distance, duration } = useRoute(start, end);
+  const { instructions, distance, duration } = useRoute(
+    logic.coord1 ? [logic.coord1.longitude, logic.coord1.latitude] : null,
+    logic.coord2 ? [logic.coord2.longitude, logic.coord2.latitude] : null
+  );
 
   function renderInputField(
     filter,
@@ -48,7 +66,6 @@ export default function Routeplanner() {
 
         {showSuggestions && filter.length > 0 && (
           <div className={styles.stationsContainer}>
-            {/* Gebruik huidige locatie */}
             <div
               className={styles.stationCard}
               onClick={() => {
@@ -106,7 +123,7 @@ export default function Routeplanner() {
 
   return (
     <div>
-      <h1 className={styles.title}>Stations zoeken</h1>
+      <h1 className={styles.title}>Routeplanner</h1>
 
       {/* Van */}
       <div style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
