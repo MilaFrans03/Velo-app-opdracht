@@ -1,7 +1,6 @@
 'use client';
 
 import styles from '../page.module.css';
-import { useState, useEffect } from 'react';
 import useNetwork from '@/data/network';
 import { useRoutePlannerLogic } from '@/helpers/route-planner-logic';
 import useRoute from '@/data/routedescription';
@@ -93,6 +92,14 @@ export default function Routeplanner() {
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
 
+  // berekeningen wandeltijd & fietstijd
+  const walkingSpeed = 5; // km/u
+  const cyclingSpeed = 15; // km/u
+  const walkingTime =
+    distance !== null ? (distance / 1000 / walkingSpeed) * 60 : null;
+  const cyclingTime =
+    distance !== null ? (distance / 1000 / cyclingSpeed) * 60 : null;
+
   return (
     <div>
       <h1 className={styles.title}>Stations zoeken</h1>
@@ -123,33 +130,24 @@ export default function Routeplanner() {
         'Eindstation'
       )}
 
-      {/* Info per station */}
-      {logic.station1 && (
-        <div className={styles.stationCard}>
-          <div className={styles.stationName}>{logic.station1.name}</div>
-          <div className={styles.stationDistance}>
-            {logic.station1.free_bikes ?? 0} fietsen,{' '}
-            {logic.station1.empty_slots ?? 0} plaatsen
-          </div>
-        </div>
-      )}
-
-      {logic.station2 && (
-        <div className={styles.stationCard}>
-          <div className={styles.stationName}>{logic.station2.name}</div>
-          <div className={styles.stationDistance}>
-            {logic.station2.free_bikes ?? 0} fietsen,{' '}
-            {logic.station2.empty_slots ?? 0} plaatsen
-          </div>
-        </div>
-      )}
-
-      {/* Afstand en duur */}
+      {/* Afstand en tijden */}
       {logic.station1 && logic.station2 && distance !== null && (
-        <p style={{ marginTop: '1rem' }}>
-          Route-afstand: {(distance / 1000).toFixed(2)} km <br />
-          Reistijd: {(duration / 60).toFixed(0)} minuten
-        </p>
+        <div style={{ marginTop: '1rem' }}>
+          <p>
+            <strong>Route-afstand:</strong> {(distance / 1000).toFixed(2)} km
+          </p>
+          <p>
+            <strong>Fietstijd:</strong> {(duration / 60).toFixed(0)} minuten
+          </p>
+          <p>
+            <strong>Wandeltijd:</strong>{' '}
+            {walkingTime !== null ? walkingTime.toFixed(0) : '-'} minuten
+          </p>
+          <p>
+            <strong>Fietstijd:</strong>{' '}
+            {cyclingTime !== null ? cyclingTime.toFixed(0) : '-'} minuten
+          </p>
+        </div>
       )}
 
       {/* Route-instructies */}
