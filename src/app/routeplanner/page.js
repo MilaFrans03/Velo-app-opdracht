@@ -138,9 +138,6 @@ export default function Routeplanner() {
         'Eindstation'
       )}
 
-      {/* Compass component */}
-      <CompassComponent />
-
       {/* Afstand en tijden */}
       {logic.coord1 && logic.coord2 && logic.distanceBetween !== null && (
         <div style={{ marginTop: '1rem' }}>

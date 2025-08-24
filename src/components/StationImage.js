@@ -1,13 +1,37 @@
+'use client';
+
 import useImage from '@/data/image';
 
-export default function StationImage(props) {
-  const { image, isLoading, isError } = useImage(props.station)
- 
-  if (isLoading) return <div>Loading...</div>
-  if (isError) return <div>Error</div>
-  if (!image) return <div>No image</div>
+export default function StationImage({ station }) {
+  const { image, isLoading, isError } = useImage(station);
+
+  if (isLoading) {
+    return (
+      <div style={{ height: 150, background: '#eee', borderRadius: '12px' }}>
+        Laden...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div style={{ height: 150, background: '#fdd', borderRadius: '12px' }}>
+        Error
+      </div>
+    );
+  }
 
   return (
-    <img src={image} width="400" height="400" alt={props.station.name}/>
-  )
+    <img
+      src={image}
+      alt={station.name}
+      style={{
+        width: '100%',
+        height: '150px',
+        objectFit: 'cover',
+        borderRadius: '12px',
+        marginBottom: '8px',
+      }}
+    />
+  );
 }

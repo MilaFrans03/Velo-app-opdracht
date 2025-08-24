@@ -5,29 +5,40 @@ import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import useNetwork from '@/data/network';
 import { getDistance } from '@/helpers/get-distance';
+import StationImage from '@/components/StationImage';
 import styles from './page.module.css';
 
 export default function Home() {
+  const defaultLocation = { latitude: 51.9244, longitude: 4.4777 }; // Rotterdam als fallback
   const [filter, setFilter] = useState('');
-  const [location, setLocation] = useState({});
+  const [location, setLocation] = useState(defaultLocation);
   const [topStations, setTopStations] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const { network, isLoading, isError } = useNetwork();
 
   // Huidige locatie ophalen
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      console.warn('Geolocatie niet beschikbaar, gebruik fallback locatie.');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
+      (pos) => {
         setLocation({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
-        }),
-      (err) => console.error(err)
+        });
+      },
+      (err) => {
+        console.error('Kon huidige locatie niet ophalen:', err.message || err);
+        alert('Kon huidige locatie niet ophalen, gebruik standaardlocatie.');
+      },
+      { enableHighAccuracy: true }
     );
   }, []);
 
-  // Bereken afstanden en sorteer
+  // Bereken afstanden en sorteer stations
   const stationsWithDistance = useMemo(() => {
     if (!network?.stations || !location.latitude) return [];
     return network.stations
@@ -39,7 +50,7 @@ export default function Home() {
             location.longitude,
             station.latitude,
             station.longitude
-          ).distance / 1000,
+          ).distance / 1000, // km
       }))
       .sort((a, b) => a.distance - b.distance);
   }, [network, location]);
@@ -51,7 +62,7 @@ export default function Home() {
     setSuggestions(stationsWithDistance.slice(3));
   }, [stationsWithDistance]);
 
-  // Filterbare suggesties: alleen tonen als filter niet leeg is
+  // Filterbare suggesties
   const filteredSuggestions = filter
     ? suggestions.filter((station) =>
         station.name.toLowerCase().includes(filter.toLowerCase())
@@ -60,10 +71,10 @@ export default function Home() {
 
   const handleFilterChange = (e) => setFilter(e.target.value);
 
-  // Conditional rendering voor loading / error
+  // Loading / error checks
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error</div>;
-  if (!network?.stations || !location.latitude) return null;
+  if (!network?.stations) return null;
 
   return (
     <div>
@@ -78,6 +89,7 @@ export default function Home() {
             href={`/stations/${station.id}`}
             className={styles.stationCard}
           >
+            <StationImage station={station} />
             <div className={styles.stationName}>
               {index + 1}. {station.name}
             </div>
@@ -92,7 +104,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Zoekbalk onder top 3 */}
+      {/* Zoekbalk */}
       <h2 className={styles.title2}>Zoek naar een station</h2>
       <input
         type="text"
@@ -102,28 +114,27 @@ export default function Home() {
         className={styles.filter}
       />
 
-      {/* Suggesties: max 3 */}
+      {/* Suggesties */}
       {filteredSuggestions.length > 0 && (
-        <>
-          <div className={styles.stationsContainer}>
-            {filteredSuggestions.slice(0, 3).map((station) => (
-              <Link
-                key={station.id}
-                href={`/stations/${station.id}`}
-                className={styles.stationCard}
-              >
-                <div className={styles.stationName}>{station.name}</div>
-                <div className={styles.stationDistance}>
-                  <MapPin
-                    size={16}
-                    style={{ marginRight: '6px', verticalAlign: 'middle' }}
-                  />
-                  {station.distance.toFixed(2)} km
-                </div>
-              </Link>
-            ))}
-          </div>
-        </>
+        <div className={styles.stationsContainer}>
+          {filteredSuggestions.slice(0, 3).map((station) => (
+            <Link
+              key={station.id}
+              href={`/stations/${station.id}`}
+              className={styles.stationCard}
+            >
+              <StationImage station={station} />
+              <div className={styles.stationName}>{station.name}</div>
+              <div className={styles.stationDistance}>
+                <MapPin
+                  size={16}
+                  style={{ marginRight: '6px', verticalAlign: 'middle' }}
+                />
+                {station.distance.toFixed(2)} km
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );
