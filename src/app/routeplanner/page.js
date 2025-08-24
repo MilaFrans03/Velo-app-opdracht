@@ -4,7 +4,7 @@ import styles from '../page.module.css';
 import useNetwork from '@/data/network';
 import { useRoutePlannerLogic } from '@/helpers/route-planner-logic';
 import useRoute from '@/data/routedescription';
-import CompassComponent from '@/components/Compas'; // import compass component
+import CompassComponent from '@/components/Compass'; // Compass component
 
 export default function Routeplanner() {
   const { network, isLoading, isError } = useNetwork();
@@ -138,8 +138,15 @@ export default function Routeplanner() {
         'Eindstation'
       )}
 
-      {/* Compass component */}
-      <CompassComponent />
+      {/* Compass */}
+      {logic.coord1 && logic.coord2 && (
+        <div style={{ marginTop: '1rem' }}>
+          <CompassComponent
+            currentPosition={logic.coord1}
+            targetPosition={logic.coord2}
+          />
+        </div>
+      )}
 
       {/* Afstand en tijden */}
       {logic.coord1 && logic.coord2 && logic.distanceBetween !== null && (

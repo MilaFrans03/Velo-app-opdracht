@@ -1,21 +1,21 @@
-import fetcher from './_fetcher';
 import useSWR from 'swr';
 
-export default function useRoute(start, end) {
-  const apiKey = process.env.NEXT_PUBLIC_OPENROUTESERVICE_TOKEN;
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
-  const shouldFetch = start && end;
+export default function useRoute(start, end) {
+  // alleen fetchen als coords volledig beschikbaar zijn
+  const shouldFetch = start?.length === 2 && end?.length === 2;
 
   const { data, error, isLoading } = useSWR(
     shouldFetch
-      ? `https://api.openrouteservice.org/v2/directions/cycling-regular?api_key=${apiKey}&start=${start[0]},${start[1]}&end=${end[0]},${end[1]}&language=nl`
+      ? `/api/route?start=${start[0]},${start[1]}&end=${end[0]},${end[1]}`
       : null,
     fetcher,
-    { revalidateOnFocus: false } // voorkomt dat hij terug ENG cachet
+    { revalidateOnFocus: false }
   );
 
   return {
-    route: data, // volledige route
+    route: data,
     instructions: data?.features?.[0]?.properties?.segments?.[0]?.steps ?? [],
     distance: data?.features?.[0]?.properties?.segments?.[0]?.distance ?? null,
     duration: data?.features?.[0]?.properties?.segments?.[0]?.duration ?? null,
