@@ -4,7 +4,7 @@ import styles from '../page.module.css';
 import useNetwork from '@/data/network';
 import { useRoutePlannerLogic } from '@/helpers/route-planner-logic';
 import useRoute from '@/data/routedescription';
-import CompassComponent from '@/components/Compas'; // import compass component
+import CompassComponent from '@/components/Compass'; // Compass component
 
 export default function Routeplanner() {
   const { network, isLoading, isError } = useNetwork();
