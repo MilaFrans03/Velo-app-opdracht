@@ -23,14 +23,17 @@ export default function Routeplanner() {
     setFilter,
     showSuggestions,
     setShowSuggestions,
-    stations
+    stations,
+    placeholder
   ) {
     if (!stations) return null;
     return (
-      <div>
+      <div className={styles.stationsContainer}>
         <input
+          className={styles.filter}
           type="text"
           value={filter}
+          placeholder={placeholder}
           onChange={(e) => {
             setFilter(e.target.value);
             setShowSuggestions(true);
@@ -39,47 +42,52 @@ export default function Routeplanner() {
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         />
         {showSuggestions && filter.length > 0 && (
-          <ul>
-            <li
+          <div className={styles.stationsContainer}>
+            <div
+              className={styles.stationCard}
               onClick={() => {
-                setFilter('📍 Gebruik huidige locatie');
+                setFilter('Gebruik huidige locatie');
                 setShowSuggestions(false);
               }}
             >
-              📍 Gebruik huidige locatie
-            </li>
+              Gebruik huidige locatie
+            </div>
             {stations
               .filter((s) =>
                 s.name.toLowerCase().includes(filter.toLowerCase())
               )
               .slice(0, 10)
               .map((station) => (
-                <li
+                <div
                   key={station.id}
+                  className={styles.stationCard}
                   onClick={() => {
                     setFilter(station.name);
                     setShowSuggestions(false);
                   }}
                 >
-                  {station.name} ({station.free_bikes ?? 0} fietsen,{' '}
-                  {station.empty_slots ?? 0} plaatsen)
-                </li>
+                  <div className={styles.stationName}>{station.name}</div>
+                  <div className={styles.stationDistance}>
+                    {station.free_bikes ?? 0} fietsen,{' '}
+                    {station.empty_slots ?? 0} plaatsen
+                  </div>
+                </div>
               ))}
-          </ul>
+          </div>
         )}
       </div>
     );
   }
 
   const directionIcons = {
-    0: '⬆️',
-    1: '↖️',
-    2: '↗️',
-    3: '⬅️',
-    4: '➡️',
-    5: '⤴️',
-    6: '⬇️',
-    7: '🏁',
+    0: '↑',
+    1: '↖',
+    2: '↗',
+    3: '←',
+    4: '→',
+    5: '↗',
+    6: '↓',
+    7: 'Eind',
   };
 
   if (isLoading) return <div>Loading...</div>;
@@ -87,70 +95,75 @@ export default function Routeplanner() {
 
   return (
     <div>
-      {/* Inputvelden */}
+      <h1 className={styles.title}>Stations zoeken</h1>
+
+      {/* Van */}
+      <div style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
+        <strong>Van</strong>
+      </div>
       {renderInputField(
         logic.filter1,
         logic.setFilter1,
         logic.showSuggestions1,
         logic.setShowSuggestions1,
-        network?.stations
+        network?.stations,
+        'Startstation'
       )}
-      <div style={{ marginTop: '2rem' }}>
-        {renderInputField(
-          logic.filter2,
-          logic.setFilter2,
-          logic.showSuggestions2,
-          logic.setShowSuggestions2,
-          network?.stations
-        )}
+
+      {/* Naar */}
+      <div style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
+        <strong>Naar</strong>
       </div>
+      {renderInputField(
+        logic.filter2,
+        logic.setFilter2,
+        logic.showSuggestions2,
+        logic.setShowSuggestions2,
+        network?.stations,
+        'Eindstation'
+      )}
 
       {/* Info per station */}
-      <div style={{ marginTop: '2rem' }}>
-        {logic.station1 && (
-          <p>
-            📍 <strong>{logic.station1.name}</strong> —{' '}
+      {logic.station1 && (
+        <div className={styles.stationCard}>
+          <div className={styles.stationName}>{logic.station1.name}</div>
+          <div className={styles.stationDistance}>
             {logic.station1.free_bikes ?? 0} fietsen,{' '}
             {logic.station1.empty_slots ?? 0} plaatsen
-          </p>
-        )}
-        {logic.station2 && (
-          <p>
-            📍 <strong>{logic.station2.name}</strong> —{' '}
+          </div>
+        </div>
+      )}
+
+      {logic.station2 && (
+        <div className={styles.stationCard}>
+          <div className={styles.stationName}>{logic.station2.name}</div>
+          <div className={styles.stationDistance}>
             {logic.station2.free_bikes ?? 0} fietsen,{' '}
             {logic.station2.empty_slots ?? 0} plaatsen
-          </p>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
       {/* Afstand en duur */}
       {logic.station1 && logic.station2 && distance !== null && (
         <p style={{ marginTop: '1rem' }}>
-          📏 Route-afstand: {(distance / 1000).toFixed(2)} km <br />⏱ Reistijd:{' '}
-          {(duration / 60).toFixed(0)} minuten
+          Route-afstand: {(distance / 1000).toFixed(2)} km <br />
+          Reistijd: {(duration / 60).toFixed(0)} minuten
         </p>
       )}
 
-      {/* Route-instructies met highlight en grotere tekst */}
+      {/* Route-instructies */}
       {instructions.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
-            🗺️ Routebeschrijving
-          </h3>
+          <h3>Routebeschrijving</h3>
           <ol style={{ listStyle: 'none', padding: 0 }}>
             {instructions.map((step, idx) => {
-              const icon = directionIcons[step.type] || '➡️';
+              const icon = directionIcons[step.type] || '→';
               return (
                 <li
                   key={idx}
-                  style={{
-                    background: '#f0f8ff',
-                    padding: '10px 15px',
-                    marginBottom: '8px',
-                    borderRadius: '8px',
-                    fontSize: '1.1rem',
-                    fontWeight: '500',
-                  }}
+                  className={styles.stationCard}
+                  style={{ fontSize: '1.1rem', fontWeight: '500' }}
                 >
                   {icon} {step.instruction} <br />
                   <span style={{ fontSize: '0.9rem', color: '#555' }}>
@@ -163,17 +176,9 @@ export default function Routeplanner() {
         </div>
       )}
 
-      {/* Geen instructies */}
       {!isError && instructions.length === 0 && start && end && (
         <p>Geen routebeschrijving beschikbaar.</p>
       )}
-
-      {/* Debug info */}
-      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: 'gray' }}>
-        <h4>Debug info</h4>
-        <p>Start: {start ? start.join(', ') : 'Geen start'}</p>
-        <p>End: {end ? end.join(', ') : 'Geen eindpunt'}</p>
-      </div>
     </div>
   );
 }
